@@ -8,7 +8,7 @@ Implementation of the programator.sk API
 - **database.py:** manages database (filesystem is used as database)
 
 ## Use
-python3 main.py starts the server on port 8080
+*python3 main.py* starts the server on port 8080
 
 ## Dependencies
 - This project uses the bottle framework
