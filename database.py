@@ -50,7 +50,7 @@ def delete_img_or_gallery(path):
     return 200
 
 ''' Saves the image (FileUpload instance) to the filesystem '''
-def save_image(image, gallery):
+def save_image(image, gallery, user_name):
     gallery_path = get_full_path(gallery)
 
     if not os.path.isdir(gallery_path):
@@ -84,7 +84,8 @@ def get_galleries():
     for name in gallery_names:
         gallery_info.append((
                 name.replace(' ', '%20'),   # path
-                name ))
+                name
+                ))
 
     return gallery_info
 
@@ -102,7 +103,8 @@ def get_gallery_info(gallery):
 
     return {
             'path': gallery.replace(' ', '%20'),
-            'name': gallery }
+            'name': gallery
+            }
 
 ''' Returns a list of all images in the specified gallery '''
 def get_images(gallery):
@@ -123,7 +125,8 @@ def get_images(gallery):
                 'path': filename,
                 'fullpath': fullpath,
                 'name': name,
-                'modified': modified })
+                'modified': modified
+                })
 
     return images
 
@@ -143,12 +146,13 @@ def get_image(w, h, path):
         raise ValueError(500)
 
     image = Image.open(fullpath)
-
-    # if neither width nor height is specified, size can not be calculated
-    if w_int == 0 and h_int == 0:
-        raise ValueError(500)
-
     width, height = image.size
+
+    # if neither width nor height is specified, setting original size
+    if w_int == 0 and h_int == 0:
+        w_int = width
+        h_int = height
+
     ratio = width/height
     if w_int == 0:
         w_int = int(h_int * ratio)
@@ -161,7 +165,8 @@ def get_image(w, h, path):
     resized_img_path = fullpath.replace('.', '_tmp.')
     resized_img.save(resized_img_path, 'JPEG')
 
-    image_response = static_file(path.replace('.', '_tmp.'), root=os.path.join(os.getcwd(), 'gallery'), mimetype='image/jpeg')
+    image_response = static_file(path.replace('.', '_tmp.'),
+            root=os.path.join(os.getcwd(), 'gallery'), mimetype='image/jpeg')
     # remove temporary image file
     os.remove(resized_img_path)
 

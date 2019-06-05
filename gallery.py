@@ -2,6 +2,7 @@ from bottle import request, response
 from bottle import post, get, put, delete
 import database as db
 import json
+from FBlogin import get_FBuser_id
 
 ''' Creates a new gallery '''
 @post('/gallery')
@@ -38,7 +39,8 @@ def create_gallery():
                     'example': None
                 },
                 'name': 'INVALID_SCHEMA',
-                'description': 'Bad JSON object: u\'name\' is a required property' })
+                'description': 'Bad JSON object: u\'name\' is a required property'
+                })
     except NameError:
         response.status = 409
         return
@@ -64,7 +66,7 @@ def get_galleries():
         # get images from the current gallery
         imgs = db.get_images(name)
         if imgs:
-            gallery['image'] = imgs
+            gallery['image'] = imgs[0]
 
         galleries_info.append(gallery)
 
@@ -95,9 +97,29 @@ def delete_img_or_gallery(path):
     response.status = status
     return
 
+''' Extracts the bearer token from the Autorization header of the request '''
+def extract_bearer_token():
+    bearer = request.headers['Authorization']
+    token = bearer.replace('Bearer ', '')
+    return token
+
 ''' Uploads image to the specified gallery '''
 @post('/gallery/<path>')
 def upload_image(path):
+    # get token from Authorization header
+    try:
+        token = extract_bearer_token()
+        if not token:
+            raise ValueError
+        # get the users id
+        user_id = get_FBuser_id(token)
+    except:
+        # no authorization provided or an error occured while retrieving user information
+        # request must be authorized, returning without uploading the file
+        response.status = 401
+        return
+
+
     try:
         file = request.files.get('image')
 
@@ -108,7 +130,7 @@ def upload_image(path):
         response.status = 400
         return
 
-    info = db.save_image(file, path)
+    info = db.save_image(file, path, user_id)
     if not info:
         # gallery not found
         response.status = 404
