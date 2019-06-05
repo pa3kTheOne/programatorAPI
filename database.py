@@ -50,14 +50,18 @@ def delete_img_or_gallery(path):
     return 200
 
 ''' Saves the image (FileUpload instance) to the filesystem '''
-def save_image(image, gallery, user_name):
+def save_image(image, gallery, user_id):
     gallery_path = get_full_path(gallery)
 
     if not os.path.isdir(gallery_path):
         # gallery does not exist
         return False
 
-    save_path = os.path.join(gallery_path, image.filename)
+    # append id to filename
+    filename = image.filename
+    split_filename = filename.split('.')
+    filename_wId = split_filename[0] + '-' + user_id + '.' + split_filename[1]
+    save_path = os.path.join(gallery_path, filename_wId)
     try:
         image.save(save_path)
     except OSError:
@@ -66,9 +70,9 @@ def save_image(image, gallery, user_name):
         image.save(save_path)
 
     # generate and return info about the uploaded image
-    path = image.filename
+    path = filename_wId
     fullpath = '%s/%s' % (gallery, path)
-    name = path.split('.')[0].capitalize()   # expecting only 1 '.' in the filename
+    name = image.filename.split('.')[0].capitalize()   # expecting only 1 '.' in the filename
     modified = time.strftime("%Y-%m-%dT%H:%M:%S%z", time.localtime())
     return {"path": path, "fullpath": fullpath, "name": name, "modified": modified}
 
